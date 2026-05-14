@@ -1,41 +1,67 @@
 context:
-  version: "0.35.0"
+  version: "0.49.0"
 
 package:
   name: oxfmt
   version: ${{ version }}
 
 source:
-  url: https://github.com/oxc-project/oxc/archive/oxfmt_v${{ version }}.tar.gz
-  sha256: 6888bc4f6d960a904f41fca45431e0a35714e826dbb138adc18fad52d0899e7f
+  url: https://github.com/oxc-project/oxc/archive/refs/tags/oxfmt_v${{ version }}.tar.gz
+  sha256: 21529feb4cb0860cbb2e0b67cd40335c63e85065640b9326546bc0422688fd2d
 
 build:
   number: 0
+  script:
+    interpreter: nu
+    env:
+      CARGO_PROFILE_RELEASE_STRIP: symbols
+      CARGO_PROFILE_RELEASE_LTO: fat
+      NPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: "false"
+    content:
+      - cargo-bundle-licenses --format yaml --output THIRDPARTY.yml
+      - pnpm install --frozen-lockfile --ignore-scripts
+      - pnpm-licenses generate-disclaimer --prod --output-file=ThirdPartyLicenses.txt
+      - pnpm --filter oxfmt-app run build
+      - cp -r apps/oxfmt/dist npm/oxfmt/dist
+      - pnpm --filter oxfmt pack
+      - npm install -g ./oxfmt-($env.PKG_VERSION).tgz
 
 requirements:
   build:
+    - nushell
     - ${{ compiler('rust') }}
     - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
     - ${{ stdlib('c') }}
+    - nodejs
+    - pnpm
     - cargo-bundle-licenses
+    - pnpm-licenses
+    - cmake
+    - make
+    - if: osx
+      then: ld64
+  run:
+    - nodejs
 
 tests:
-  - script:
-      - oxfmt --help
-      - if: unix
-        then:
-          - echo 'const x = 1;' > test.js
-          - oxfmt test.js
-      - if: win
-        then:
-          - echo const x = 1; > test.js
-          - oxfmt test.js
+  - requirements:
+      build:
+        - nushell
+    script:
+      interpreter: nu
+      content:
+        - oxfmt --help
+        - oxfmt --lsp
+        - "'const x = 1;' | save test.js"
+        - oxfmt test.js
 
 about:
   license: MIT
   license_file:
     - LICENSE
     - THIRDPARTY.yml
+    - ThirdPartyLicenses.txt
   summary: Formatter for oxc
   homepage: https://github.com/oxc-project/oxc
   repository: https://github.com/oxc-project/oxc
