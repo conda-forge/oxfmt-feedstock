@@ -8,6 +8,8 @@ conda_build:
 conda_forge_output_validation: true
 bot:
   automerge: true
+  version_updates:
+    allowed_tag_globs: "oxfmt_v*"
 provider:
   linux_aarch64: default
   osx_arm64: default

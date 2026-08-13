@@ -1,13 +1,13 @@
 context:
-  version: "0.35.0"
+  version: "0.63.0"
 
 package:
   name: oxfmt
   version: ${{ version }}
 
 source:
-  url: https://github.com/oxc-project/oxc/archive/oxfmt_v${{ version }}.tar.gz
-  sha256: 6888bc4f6d960a904f41fca45431e0a35714e826dbb138adc18fad52d0899e7f
+  url: https://github.com/oxc-project/oxc/archive/refs/tags/oxfmt_v${{ version }}.tar.gz
+  sha256: 8f71880679fb658b1e671c769dbec310c9b93c1f45a0b17a13f39edad3724be5
 
 build:
   number: 0
@@ -24,6 +24,8 @@ tests:
       - oxfmt --help
       - if: unix
         then:
+          # Since oxfmt was fixed in https://github.com/oxc-project/oxc/pull/22210 to correctly read .gitignore and .git/info/exclude from parent directories, changed it to run in an isolated environment not affected by the current directory
+          - cd "$(mktemp -d)"
           - echo 'const x = 1;' > test.js
           - oxfmt test.js
       - if: win
