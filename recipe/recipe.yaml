@@ -24,6 +24,8 @@ tests:
       - oxfmt --help
       - if: unix
         then:
+          # Since oxfmt was fixed in https://github.com/oxc-project/oxc/pull/22210 to correctly read .gitignore and .git/info/exclude from parent directories, changed it to run in an isolated environment not affected by the current directory
+          - cd "$(mktemp -d)"
           - echo 'const x = 1;' > test.js
           - oxfmt test.js
       - if: win
